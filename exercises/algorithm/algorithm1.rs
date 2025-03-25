@@ -2,13 +2,12 @@
 	single linked list merge
 	This problem requires you to merge two ordered singly linked lists into one ordered singly linked list
 */
-// I AM NOT DONE
 
 use std::fmt::{self, Display, Formatter};
 use std::ptr::NonNull;
-use std::vec::*;
+use std::{cmp, iter, vec::*};
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 struct Node<T> {
     val: T,
     next: Option<NonNull<Node<T>>>,
@@ -69,14 +68,61 @@ impl<T> LinkedList<T> {
             },
         }
     }
-	pub fn merge(list_a:LinkedList<T>,list_b:LinkedList<T>) -> Self
-	{
-		//TODO
-		Self {
+}
+
+impl <T: Ord + Copy> LinkedList<T> {
+	pub fn merge(list_a:LinkedList<T>,list_b:LinkedList<T>) -> Self {
+        let mut first = list_a.start;
+        let mut second = list_b.start;
+
+        let mut la = iter::from_fn(move||{
+            if let Some(node) = first {
+                let node = unsafe { *node.as_ptr() };
+                first = node.next;
+                return Some(node.val);
+            }
+            None
+        });
+
+        let mut lb = iter::from_fn(move||{
+            if let Some(node) = second {
+                let node = unsafe { *node.as_ptr() };
+                second = node.next;
+                return Some(node.val);
+            }
+            None
+        });
+
+        let mut rst = Self {
             length: 0,
             start: None,
             end: None,
+        };
+        let (mut n1, mut n2) = (la.next(), lb.next());
+        loop {
+            match (n1, n2) {
+                (None, None) => break,
+                (None, Some(t2)) => {
+                    rst.add(t2);
+                    n2 = lb.next();
+                },
+                (Some(t1), None) => {
+                    rst.add(t1);
+                    n1 = la.next();
+                },
+                (Some(t1), Some(t2)) => {
+                    if t1 < t2{
+                        rst.add(t1);
+                        n1 = la.next();
+                    }else{
+                        rst.add(t2);
+                        n2 = lb.next();
+                    }
+                },
+            }
         }
+		
+		rst
 	}
 }
 
